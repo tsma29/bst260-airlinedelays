@@ -1,0 +1,135 @@
+1. departure delay by city
+
+```{r}
+# read in dataset
+library(plotly)
+packageVersion('plotly')
+library(dplyr)
+df <- read.csv("C:/Users/ziwan/Desktop/2018 Fall Courses/BST 260/Project/201701.csv")
+```
+
+```{r}
+# calculate mean departure delay minutes by city
+city_delay <- df %>%
+  group_by(ORIGIN_CITY_NAME) %>%
+  summarize(mean_delay = mean(DEP_DELAY_NEW, na.rm = TRUE))
+
+library(splitstackshape)
+city_delay <- cSplit(city_delay, "ORIGIN_CITY_NAME", sep=",")
+
+city_delay <- city_delay %>% mutate(name = ORIGIN_CITY_NAME_1)
+```
+
+```{r}
+# add the coordination of cities
+coordinate <- read.csv('https://raw.githubusercontent.com/plotly/datasets/master/2014_us_cities.csv')
+
+
+city_delay <- city_delay %>% mutate(name = trimws(as.character(name)))
+
+coordinate <- coordinate %>% mutate(name = trimws(as.character(name)))
+
+merged_city_delay <- left_join(city_delay,coordinate, by='name')
+
+merged_city_delay <- merged_city_delay %>% 
+  group_by(name) %>%
+  summarize(mean_delay = mean(mean_delay, na.rm = TRUE), lat = mean(lat), lon = mean(lon))
+
+```
+
+
+```{r}
+# draw the plot by cities
+merged_city_delay$q <- with(merged_city_delay, cut(mean_delay, quantile(mean_delay)))
+levels(merged_city_delay$q) <- paste(c("1st", "2nd", "3rd", "4th", "5th"), "Quantile")
+merged_city_delay$q <- as.ordered((merged_city_delay$q))
+
+
+g <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showland = TRUE,
+  landcolor = toRGB("gray85"),
+  subunitwidth = 1,
+  countrywidth = 1,
+  subunitcolor = toRGB("white"),
+  countrycolor = toRGB("white")
+)
+
+
+p <- plot_geo(merged_city_delay, locationmode = 'USA-states', sizes = c(1, 250)) %>%
+  add_markers(
+    x = ~lon, y = ~lat, size = ~mean_delay, color = ~q, hoverinfo = "text",
+    text = ~paste(merged_city_delay$name, "<br />", merged_city_delay$mean_delay, "minutes")
+  ) %>%
+  layout(title = '2017 January average departure delay (minutes) by city', geo = g)
+
+
+
+
+p
+```
+
+
+2. arrival delay by city
+
+```{r}
+# calculate mean departure delay minutes by city
+city_delay <- df %>%
+  group_by(DEST_CITY_NAME) %>%
+  summarize(mean_delay = mean(ARR_DELAY_NEW, na.rm = TRUE))
+
+library(splitstackshape)
+city_delay <- cSplit(city_delay, "DEST_CITY_NAME", sep=",")
+
+city_delay <- city_delay %>% mutate(name = DEST_CITY_NAME_1)
+```
+
+```{r}
+# add the coordination of cities
+coordinate <- read.csv('https://raw.githubusercontent.com/plotly/datasets/master/2014_us_cities.csv')
+
+
+city_delay <- city_delay %>% mutate(name = trimws(as.character(name)))
+
+coordinate <- coordinate %>% mutate(name = trimws(as.character(name)))
+
+merged_city_delay <- left_join(city_delay,coordinate, by='name')
+
+merged_city_delay <- merged_city_delay %>% 
+  group_by(name) %>%
+  summarize(mean_delay = mean(mean_delay, na.rm = TRUE), lat = mean(lat), lon = mean(lon))
+
+```
+
+```{r}
+# draw the plot by cities
+merged_city_delay$q <- with(merged_city_delay, cut(mean_delay, quantile(mean_delay)))
+levels(merged_city_delay$q) <- paste(c("1st", "2nd", "3rd", "4th", "5th"), "Quantile")
+merged_city_delay$q <- as.ordered((merged_city_delay$q))
+
+
+g <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showland = TRUE,
+  landcolor = toRGB("gray85"),
+  subunitwidth = 1,
+  countrywidth = 1,
+  subunitcolor = toRGB("white"),
+  countrycolor = toRGB("white")
+)
+
+
+p <- plot_geo(merged_city_delay, locationmode = 'USA-states', sizes = c(1, 250)) %>%
+  add_markers(
+    x = ~lon, y = ~lat, size = ~mean_delay, color = ~q, hoverinfo = "text",
+    text = ~paste(merged_city_delay$name, "<br />", merged_city_delay$mean_delay, "minutes")
+  ) %>%
+  layout(title = '2017 January average arrival delay (minutes) by city', geo = g)
+
+
+
+p
+```
+
