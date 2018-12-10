@@ -1,0 +1,135 @@
+---
+title: "airline and airport"
+author: "Danyao Jin"
+date: "2018Äê12ÔÂ9ÈÕ"
+output: html_document
+---
+
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(dplyr)
+library(dslabs)
+library(ggthemes)
+```
+
+
+```{r message=FALSE, warning=FALSE}
+dat <- read_csv("C:/Users/jindanyao/Desktop/2018fall/2018fall/BST260/final project/database/flight2017.csv")
+```
+
+
+
+
+```{r echo=FALSE}
+flight_perc <- dat%>%
+  filter(!is.na(DEP_DEL15)) %>%
+  group_by(OP_UNIQUE_CARRIER)%>%
+  mutate(percent_delay = sum(DEP_DEL15)/length(DEP_DEL15))%>%
+  select(OP_UNIQUE_CARRIER,percent_delay)%>%
+  unique()%>%
+  ggplot(aes(x=reorder(OP_UNIQUE_CARRIER,percent_delay),y=percent_delay))+
+  geom_bar(stat ="identity" )+
+  geom_text(mapping = aes(label=signif(percent_delay,2)), hjust = 0)+
+  coord_flip()+
+  ggtitle("Percentage of delays in different airlines")+
+  theme_economist()+
+  scale_fill_economist()+
+  guides(fill=guide_legend(title=NULL))+
+  xlab("")+
+  ylab("percetage")
+flight_perc
+```
+
+
+
+```{r echo=FALSE}
+flight_avg2 <- dat%>%
+  filter(!is.na(DEP_DELAY_NEW)) %>%
+  filter(DEP_DELAY_NEW>=15)%>%
+  group_by(OP_UNIQUE_CARRIER)%>%
+  filter(!is.na(CARRIER_DELAY)) %>%
+  mutate(carrier_cause=mean(CARRIER_DELAY))%>%
+  filter(!is.na(WEATHER_DELAY)) %>%
+  mutate(weather_cause=mean(WEATHER_DELAY))%>%
+  filter(!is.na(NAS_DELAY)) %>%
+  mutate(NAS_cause=mean(NAS_DELAY))%>%
+  filter(!is.na(SECURITY_DELAY)) %>%
+  mutate(security_cause=mean(SECURITY_DELAY))%>%
+  filter(!is.na(LATE_AIRCRAFT_DELAY)) %>%
+  mutate(late_cause=mean(LATE_AIRCRAFT_DELAY))%>%
+  select(OP_UNIQUE_CARRIER,carrier_cause,NAS_cause,weather_cause,security_cause,late_cause)%>%
+  unique()%>%
+  gather(type,value,-OP_UNIQUE_CARRIER)%>%
+  ggplot(aes(x=reorder(OP_UNIQUE_CARRIER,value),value,fill=type))+
+  geom_bar(stat="identity",position="stack")+
+  geom_col(aes(fill = type), position = position_stack(reverse = TRUE))+
+  ggtitle("Average minutes of delays in different airlines")+
+  theme_economist()+
+  scale_fill_economist()+
+  guides(fill=guide_legend(title=NULL))+
+  coord_flip()+
+  xlab("")+
+  ylab("minutes")
+flight_avg2
+```
+
+
+
+
+
+
+```{r echo=FALSE}
+airport_perc <- dat%>%
+  filter(ORIGIN %in% c("JFK","MIA","LAX","EWR","ORD","ATL","SFO","IAH","IAD","DFW"))%>%
+  filter(!is.na(DEP_DEL15)) %>%
+  group_by(ORIGIN)%>%
+  mutate(percent_delay = sum(DEP_DEL15)/length(DEP_DEL15))%>%
+  select(ORIGIN,percent_delay)%>%
+  unique()%>%
+  ggplot(aes(x=reorder(ORIGIN,percent_delay),y=percent_delay))+
+  geom_bar(stat ="identity" )+
+   geom_text(mapping = aes(label=signif(percent_delay,2)), hjust = 0)+
+  coord_flip()+
+  ggtitle("Percentage of delays in top 10 busiest airports")+
+  theme_economist()+
+  scale_fill_economist()+
+  guides(fill=guide_legend(title=NULL))+
+  xlab("")+
+  ylab("percentage")
+airport_perc
+
+```
+
+
+```{r echo=FALSE}
+airport_avg2 <- dat%>%
+  filter(ORIGIN %in% c("JFk","MIA","LAX","EWR","ORD","ATL","SFO","IAH","IAD","DFW"))%>%
+  filter(!is.na(DEP_DELAY_NEW)) %>%
+  filter(DEP_DELAY_NEW>=15)%>%
+  group_by(ORIGIN)%>%
+  filter(!is.na(CARRIER_DELAY)) %>%
+  mutate(carrier_cause=mean(CARRIER_DELAY))%>%
+  filter(!is.na(WEATHER_DELAY)) %>%
+  mutate(weather_cause=mean(WEATHER_DELAY))%>%
+  filter(!is.na(NAS_DELAY)) %>%
+  mutate(NAS_cause=mean(NAS_DELAY))%>%
+  filter(!is.na(SECURITY_DELAY)) %>%
+  mutate(security_cause=mean(SECURITY_DELAY))%>%
+  filter(!is.na(LATE_AIRCRAFT_DELAY)) %>%
+  mutate(late_cause=mean(LATE_AIRCRAFT_DELAY))%>%
+  select(ORIGIN,carrier_cause,NAS_cause,weather_cause,security_cause,late_cause)%>%
+  unique()%>%
+  gather(type,value,-ORIGIN)%>%
+  ggplot(aes(x=reorder(ORIGIN,value),value,fill=type))+
+  geom_bar(stat="identity",position="stack")+
+  geom_col(aes(fill = type), position = position_stack(reverse = TRUE))+
+  ggtitle("Average minutes of delays in top 10 busiest airports")+
+  theme_economist()+
+  scale_fill_economist()+
+  guides(fill=guide_legend(title=NULL))+
+  coord_flip()+
+  xlab("")+
+  ylab("minutes")
+airport_avg2
+```
