@@ -277,7 +277,7 @@ p4 <- plot_geo(locationmode = 'USA-states', color = I("red")) %>%
 
 ```{r}
 p <- subplot(p1, p2, p3, p4, nrows = 2) %>%
-  layout(title = "2017 January flight routes with different delay times",
+  layout(title = "2017 flight routes with different delay times",
          xaxis = list(domain=list(x=c(0,0.5),y=c(0,0.5))),
          scene = list(domain=list(x=c(0.5,1),y=c(0,0.5))),
          xaxis2 = list(domain=list(x=c(0.5,1),y=c(0.5,1))),
