@@ -1,6 +1,8 @@
 # Part 1: descriptive analysis of delays using interactive US maps
 (*Author: Zifan Wang*)
 
+Before diving into the the multivariable analyses, we first wish to get an overall view of how delay times are distributed across different regions. We will use interactive maps to describe the delay patterns in different US states, cities, and by different flight routes.
+
 ## Step 0: setting up credentials for plot sharing / loading the dataset
 ```{r}
 Sys.setenv("plotly_username"="ziwang970")
@@ -18,6 +20,8 @@ df <- read.csv("C:/Users/ziwan/Desktop/2018 Fall Courses/BST 260/Project/dataset
 
 
 ## Step 1: descriptive US maps for delays by states
+
+In this step, we will describe the average delay times of each state:
 
 ```{r}
 # calculate mean departure delay minutes by state
@@ -52,9 +56,15 @@ p <- plot_geo(state_delay, locationmode = 'USA-states') %>%
 p
 ```
 
+From the plot, we see that in general, the Northeast region of the US had experienced longer delay times in 2017 (States like Maine or Vermont had average delay times over 20 minutes). For other regions, there seems to be relatively long delay times in the South and the West coast.
+
+
+
 
 
 ## Step 2: descriptive US maps for delays by cities
+
+We then look at the delay time patterns for each departure city: The delay times are categorized into 4 quartiles and shown by colored bubbles, and the size of the bubbles depicts the length of delay time:
 ```{r}
 # calculate mean departure delay minutes by city
 city_delay <- df %>%
@@ -117,8 +127,12 @@ p
 ```
 
 
+From the plot, we see that similar to the plot by states, cities in the Northeast, South and the West coast are more likely to have delay times at the highest (yellow) or second highest (green) quartiles, with some cities (e.g. St. Augustine in Florida) reaching average delays of more than 60 minutes. Cities with the shortest average delay times are generally in the Midwest area.
+
+
 ## Step 3: descriptive US maps for delays by routes
 
+Next, we look at the flight routes with delays: we will display the routes with an average delay time of 15+, 30+, 60+, and 90+ minutes in 2017:
 ```{r}
 # group by flight routes and calculate mean departure delay
 
@@ -289,3 +303,5 @@ p <- subplot(p1, p2, p3, p4, nrows = 2) %>%
          )
 p
 ```
+
+We can see from the plot that as the threshold for delays increases, the number of routes with the corresponding delay time decreases. There have been many routes with average delay times of 15+ minutes in 2017, but only very few of them had an average delay of more than 60 or 90 minutes (e.g. the route between New York and San Antonio).
