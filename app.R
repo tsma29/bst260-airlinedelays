@@ -5,8 +5,9 @@ library(dslabs)
 library(tidyverse)
 library(dplyr)
 library(readr)
-dat<-read_csv("201701.csv")
-dat1 <- dat %>% mutate(DEP_HOUR=as.numeric(substr(CRS_DEP_TIME,1,2)))
+dat<-read_csv("flight2017.csv")
+dat <- dat %>% select(CRS_DEP_TIME, OP_UNIQUE_CARRIER, DEP_DEL15, DAY_OF_WEEK, DEP_DELAY_NEW)
+dat1 <- dat %>% mutate(DEP_HOUR=as.integer(as.numeric(CRS_DEP_TIME)/100))
 
 dat2<- dat1 %>%  filter(!is.na(DEP_DEL15)) %>%
   group_by(DEP_HOUR, DAY_OF_WEEK) %>%
@@ -26,8 +27,8 @@ ui <- navbarPage("Effect of depature time on",
            tabPanel("Delay percentage",
                     sidebarLayout(
                       sidebarPanel(
-                        radioButtons("carrier1", "Airlines", c("AA"="AA","AS"="AS","B6"="B6","DL"="DL","EV"="EV","F9"="F9",
-                                                              "HA"="HA","NK"="NK","OO"="OO","UA"="UA","VX"="VX","WN"="WN"))
+                        radioButtons("carrier1", "Airlines", c("American Airlines"="AA","Alaska Airlines"="AS","JetBlue Airlines"="B6","Delta Airlines"="DL","ExpressJet Airlines"="EV","Frontier Airlines"="F9",
+                                                              "Hawaiian Airlines"="HA","Spirit Airlines"="NK","SkyWest Airlines"="OO","United Airlines"="UA","Virgin America"="VX","SouthWest Airlines"="WN"))
                       ),
                       mainPanel(
                         plotOutput("plotheat")
@@ -37,8 +38,8 @@ ui <- navbarPage("Effect of depature time on",
            tabPanel("Delay time",
                     sidebarLayout(
                       sidebarPanel(
-                        radioButtons("carrier2", "Airlines", c("AA"="AA","AS"="AS","B6"="B6","DL"="DL","EV"="EV","F9"="F9",
-                                                              "HA"="HA","NK"="NK","OO"="OO","UA"="UA","VX"="VX","WN"="WN"))
+                        radioButtons("carrier2", "Airlines", c("American Airlines"="AA","Alaska Airlines"="AS","JetBlue Airlines"="B6","Delta Airlines"="DL","ExpressJet Airlines"="EV","Frontier Airlines"="F9",
+                                                               "Hawaiian Airlines"="HA","Spirit Airlines"="NK","SkyWest Airlines"="OO","United Airlines"="UA","Virgin America"="VX","SouthWest Airlines"="WN"))
                       ),
                       mainPanel(
                         plotOutput("plotbar")

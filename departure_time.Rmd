@@ -1,7 +1,7 @@
 ---
 title: "Departure time"
 author: "XinyiLi73"
-date: "2018/12/6"
+date: "2018Äê12ÔÂ6ÈÕ"
 output: html_document
 ---
 ```{r}
@@ -10,13 +10,20 @@ library(tidyverse)
 library(dplyr)
 library(shiny)
 library(readr)
-
+dat<-read_csv("flight2017.csv")
+```
+```{r}
+dat <- dat %>% select(CRS_DEP_TIME, OP_UNIQUE_CARRIER, DEP_DEL15, DAY_OF_WEEK, DEP_DELAY_NEW)
 ```
 
-Generate departure hour, overall delay percentage, overall average delay hours, and delay percentage and average delay hours for each carrier (dat2 for percentage, dat3 for delay hour-only delayed flight included):
-```{r}
-dat1 <- dat %>% mutate(DEP_HOUR=as.numeric(substr(CRS_DEP_TIME,1,2))) ## departure hour extraction wrong
 
+Generate departure hour:
+```{r}
+dat1 <- dat %>% mutate(DEP_HOUR=as.integer(as.numeric(CRS_DEP_TIME)/100))
+```
+
+Generate overall delay percentage, overall average delay hours, and delay percentage and average delay hours for each carrier (dat2 for percentage, dat3 for delay hour-only delayed flight included):
+```{r}
 dat2<- dat1 %>%  filter(!is.na(DEP_DEL15)) %>%
   group_by(DEP_HOUR, DAY_OF_WEEK) %>%
   mutate(PERCENTAGE_OVERALL=mean(DEP_DEL15))
@@ -30,7 +37,6 @@ dat4 <- dat2 %>%  filter(!is.na(DEP_DEL15)) %>%
 dat5 <- dat3 %>% filter(!is.na(DEP_DELAY_NEW) & DEP_DEL15==1) %>%
   group_by(OP_UNIQUE_CARRIER,DEP_HOUR) %>%
   mutate(AVERAGE=mean(DEP_DELAY_NEW))
-dat5
 ```
 
 Heatmap for overall delay percentage:
@@ -45,6 +51,9 @@ dat2 %>% ggplot(aes(DEP_HOUR, DAY_OF_WEEK,  fill = PERCENTAGE_OVERALL)) +
   labs(title="Overall delay percentage in each hour and each day of week",y="Day of week",x="Departure hour")
 ```
 
+Overall, 2-4am is the time period with the highest delay rate (about 25%). On the contrary, 5-10am is the period with the lowest delay rate (about 10%). Departing in the morning might minimize your probability of encountering flight delay. 
+
+
 Bar plot for overall average delay hours:
 ```{r}
 dat3 %>% select(DEP_HOUR,AVERAGE_OVERALL) %>%
@@ -54,9 +63,14 @@ dat3 %>% select(DEP_HOUR,AVERAGE_OVERALL) %>%
   labs(title="Overall delay time in each hour and each day of week",y="Average delay time (minutes)",x="Departure hour")
 ```
 
+1-2am and 5-8am have relatively high delay time on avergae. According to the plot, the worst choice might be having your flight schedule at 5am, which may leading to average delay time for nearly 90 minutes.
+
 
 ```{r}
 runApp("app.R")
 ```
 
+From the plot above, we can see that the effect of departure hour and departure day on delay rate do not vary across different airlines. The general trend is the delay rate is higher on Thursday, Friday, Sunday and Monday than other days. And the delay rate is especially high during 0 to 4am, while 5 to 10am seems to be the safest time period to avoid flight delay. Overall, Hawaiian Airlines performs the best in terms of delay rate, while JetBlue Airlines performs the worst among all 12 carriers in the database. Interstingly, if you choose to take a flight by Spirit Airlines leaving in Saturday 3am, or by United Airlines leaving in Thursday or Friday 4am, or by SkyWest Airlines leaving in 0am during Thursday to Saturday, you are going to suffer a flight delay almost 100% time.
+
+The effect of departure hour on average delay time seems to differ among different airlines. SkyWest Airlines has astonishingly high delay time. Imagine you have a flight by SkyWest sheduled to departing at 0am, you often need to wait more than 1.5 hour for your SkyWest flight. Hawaiian Airlines has the best performance on delay time as most of flight delay time is below 1 hour.
 
