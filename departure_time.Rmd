@@ -1,7 +1,7 @@
 ---
 title: "Departure time"
 author: "XinyiLi73"
-date: "2018Äê12ÔÂ6ÈÕ"
+date: "2018/12/6"
 output: html_document
 ---
 ```{r}
@@ -10,12 +10,12 @@ library(tidyverse)
 library(dplyr)
 library(shiny)
 library(readr)
-dat<-read_csv("201701.csv")
+
 ```
 
 Generate departure hour, overall delay percentage, overall average delay hours, and delay percentage and average delay hours for each carrier (dat2 for percentage, dat3 for delay hour-only delayed flight included):
 ```{r}
-dat1 <- dat %>% mutate(DEP_HOUR=as.numeric(substr(CRS_DEP_TIME,1,2)))
+dat1 <- dat %>% mutate(DEP_HOUR=as.numeric(substr(CRS_DEP_TIME,1,2))) ## departure hour extraction wrong
 
 dat2<- dat1 %>%  filter(!is.na(DEP_DEL15)) %>%
   group_by(DEP_HOUR, DAY_OF_WEEK) %>%

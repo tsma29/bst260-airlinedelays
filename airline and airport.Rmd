@@ -1,7 +1,7 @@
 ---
 title: "airline and airport"
 author: "Danyao Jin"
-date: "2018Äê12ÔÂ9ÈÕ"
+date: "2018/12/9"
 output: html_document
 ---
 
@@ -15,7 +15,8 @@ library(ggthemes)
 
 
 ```{r message=FALSE, warning=FALSE}
-dat <- read_csv("C:/Users/jindanyao/Desktop/2018fall/2018fall/BST260/final project/database/flight2017.csv")
+#read in dataset "flight2017.csv"
+dat <- read_csv("/Users/matszshan/Documents/BST260/flight2017.csv") 
 ```
 
 
@@ -38,7 +39,11 @@ flight_perc <- dat%>%
   guides(fill=guide_legend(title=NULL))+
   xlab("")+
   ylab("percetage")
+
 flight_perc
+```
+```{r}
+ggsave("Percentage of delays in different airlines.png",plot = flight_perc,width = 7, height = 4)
 ```
 
 
@@ -74,6 +79,9 @@ flight_avg2 <- dat%>%
 flight_avg2
 ```
 
+```{r}
+ggsave("Average minutes of delays in different airlines.png",plot = flight_avg2,width = 8, height = 4)
+```
 
 
 
@@ -101,10 +109,14 @@ airport_perc
 
 ```
 
+```{r}
+ggsave("Percentage of delays in top 10 busiest airports.png",plot = airport_perc,width = 7, height = 4)
+```
+
 
 ```{r echo=FALSE}
 airport_avg2 <- dat%>%
-  filter(ORIGIN %in% c("JFk","MIA","LAX","EWR","ORD","ATL","SFO","IAH","IAD","DFW"))%>%
+  filter(ORIGIN %in% c("JFK","MIA","LAX","EWR","ORD","ATL","SFO","IAH","IAD","DFW"))%>%
   filter(!is.na(DEP_DELAY_NEW)) %>%
   filter(DEP_DELAY_NEW>=15)%>%
   group_by(ORIGIN)%>%
@@ -133,3 +145,8 @@ airport_avg2 <- dat%>%
   ylab("minutes")
 airport_avg2
 ```
+
+```{r}
+ggsave("Average minutes of delays in top 10 busiest airports.png",plot = airport_avg2,width = 8, height = 4)
+```
+
