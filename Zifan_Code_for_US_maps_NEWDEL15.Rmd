@@ -1,0 +1,399 @@
+---
+title: "US_map_newE"
+output: html_document
+---
+
+# Part 1: descriptive analysis of delays using interactive US maps
+(*Author: Zifan Wang*)
+
+Before diving into the the multivariable analyses, we first wish to get an overall view of how delay times are distributed across different regions. We will use interactive maps to describe the delay patterns in different US states, cities, and by different flight routes.
+
+## Step 0: setting up credentials for plot sharing / loading the dataset
+```{r}#
+Sys.setenv("plotly_username"="ziwang970")
+Sys.setenv("plotly_api_key"="Rh542AcijT2qJ07JZsQY")
+```
+
+```{r}
+Sys.setenv("plotly_username"="tsma29")
+Sys.setenv("plotly_api_key"="7VWfMILchgTnOAX2DiZA")
+```
+
+```{r}
+# read in dataset
+library(dplyr)
+library(plotly)
+dat <- read.csv("/Users/matszshan/Documents/BST260/flight2017.csv")
+```
+
+
+## Step 1: descriptive US maps for delays by states
+
+In this step, we will describe the average delay times of each state:
+
+```{r}
+# calculate mean departure delay minutes by state
+state_delay <- dat %>% filter(DEP_DEL15==1) %>%
+  group_by(ORIGIN_STATE_ABR) %>%
+  summarize(mean_delay = mean(DEP_DELAY_NEW, na.rm = TRUE))
+```
+
+```{r}
+# give state boundaries white borders
+l <- list(color = toRGB("white"), width = 2)
+# specify some map projection/options
+g <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showlakes = TRUE,
+  lakecolor = toRGB('white')
+)
+
+# make the plot
+p_state <- plot_geo(state_delay, locationmode = 'USA-states') %>%
+  add_trace(
+    z = ~mean_delay, locations = ~ORIGIN_STATE_ABR,
+    color = ~mean_delay, colors = 'Purples'
+  ) %>%
+  colorbar(title = "Departure delay in minutes") %>%
+  layout(
+    title = '2017 average departure delay (minutes) by states',
+    geo = g
+  )
+p_state
+```
+
+
+From the plot, we see that in general, the Northeast region of the US had experienced longer delay times in 2017 (States like Maine or Vermont had average delay times over 20 minutes). For other regions, there seems to be relatively long delay times in the South and the West coast.
+
+
+
+
+
+
+## Step 2: descriptive US maps for delays by cities
+
+We then look at the delay time patterns for each departure city: The delay times are categorized into 4 quartiles and shown by colored bubbles, and the size of the bubbles depicts the length of delay time:
+```{r}
+# calculate mean departure delay minutes by city
+city_delay <- dat %>% filter(DEP_DEL15==1) %>%
+  group_by(ORIGIN_CITY_NAME) %>%
+  summarize(mean_delay = mean(DEP_DELAY_NEW, na.rm = TRUE))
+
+library(splitstackshape)
+city_delay <- cSplit(city_delay, "ORIGIN_CITY_NAME", sep=",")
+
+city_delay <- city_delay %>% mutate(name = ORIGIN_CITY_NAME_1)
+```
+
+```{r}
+# add the coordination of cities
+coordinate <- read.csv('https://raw.githubusercontent.com/plotly/datasets/master/2014_us_cities.csv')
+
+
+city_delay <- city_delay %>% mutate(name = trimws(as.character(name)))
+
+coordinate <- coordinate %>% mutate(name = trimws(as.character(name)))
+
+merged_city_delay <- left_join(city_delay,coordinate, by='name')
+
+merged_city_delay <- merged_city_delay %>% 
+  group_by(name) %>%
+  summarize(mean_delay = mean(mean_delay, na.rm = TRUE), lat = mean(lat), lon = mean(lon))
+
+```
+
+```{r}
+# draw the plot by cities
+merged_city_delay$q <- with(merged_city_delay, cut(mean_delay, quantile(mean_delay)))
+levels(merged_city_delay$q) <- paste(c("1st", "2nd", "3rd", "4th", "5th"), "Quantile")
+merged_city_delay$q <- as.ordered((merged_city_delay$q))
+
+
+g <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showland = TRUE,
+  landcolor = toRGB("gray85"),
+  subunitwidth = 1,
+  countrywidth = 1,
+  subunitcolor = toRGB("white"),
+  countrycolor = toRGB("white")
+)
+
+p_cities <- plot_geo(merged_city_delay, locationmode = 'USA-states', sizes = c(1, 250)) %>%
+  add_markers(
+    x = ~lon, y = ~lat, size = ~mean_delay, color = ~q, hoverinfo = "text",
+    text = ~paste(merged_city_delay$name, "<br />", merged_city_delay$mean_delay, "minutes")
+  ) %>%
+  layout(title = '2017 average departure delay (minutes) by city', geo = g)
+p_cities
+```
+
+
+From the plot, we see that similar to the plot by states, cities in the Northeast, South and the West coast are more likely to have delay times at the highest (yellow) or second highest (green) quartiles, with some cities (e.g. St. Augustine in Florida) reaching average delays of more than 60 minutes. Cities with the shortest average delay times are generally in the Midwest area.
+
+
+## Step 3: descriptive US maps for delays by routes
+
+Next, we look at the flight routes with delays: we will display the routes with an average delay time of 15+, 30+, 60+, and 90+ minutes in 2017:
+```{r}
+# group by flight routes and calculate mean departure delay
+
+route_delay <- dat %>% filter(DEP_DEL15==1) %>%
+  group_by(ORIGIN_CITY_NAME, DEST_CITY_NAME) %>%
+  summarize(mean_delay = mean(DEP_DELAY_NEW, na.rm = TRUE)) 
+
+
+library(splitstackshape)
+route_delay <- cSplit(route_delay, "ORIGIN_CITY_NAME", sep=",")
+route_delay <- cSplit(route_delay, "DEST_CITY_NAME", sep=",")
+
+route_delay <- route_delay %>% mutate(name1 = ORIGIN_CITY_NAME_1, name2 = DEST_CITY_NAME_1)
+```
+
+```{r}
+# add the coordination of cities
+coordinate <- read.csv('https://raw.githubusercontent.com/plotly/datasets/master/2014_us_cities.csv')
+
+route_delay <- route_delay %>% mutate(name1 = trimws(as.character(name1)), name2 = trimws(as.character(name2)))
+
+coordinate <- coordinate %>% mutate(name = trimws(as.character(name)))
+
+
+merged_1 <- left_join(route_delay,coordinate, by = c("name1" = "name")) %>%
+  rename(lat1 = lat, lon1 = lon, pop1 = pop) %>%
+  select(mean_delay, name1, name2, pop1, lat1, lon1)
+
+merged_2 <- left_join(route_delay,coordinate, by = c("name2" = "name")) %>%
+  rename(lat2 = lat, lon2 = lon, pop2 = pop) %>%
+  select(mean_delay, name1, name2, pop2, lat2, lon2)
+
+merged_route_delay <- left_join(merged_1, merged_2, by = c("name1", "name2")) %>%
+  rename(mean_delay = mean_delay.x) %>%
+  select(mean_delay, name1, name2, pop1, lat1, lon1, pop2, lat2, lon2)
+
+merged_route_delay <- merged_route_delay %>%      # get the mean population for each city
+  group_by(name1, name2) %>%
+  summarize(mean_delay = mean(mean_delay, na.rm = TRUE), 
+            pop1 = mean(pop1, na.rm = TRUE), pop2 = mean(pop2, na.rm = TRUE),
+            lat1 = mean(lat1, na.rm = TRUE), lon1 = mean(lon1, na.rm = TRUE),
+            lat2 = mean(lat2, na.rm = TRUE), lon2 = mean(lon2, na.rm = TRUE))
+```
+
+```{r}
+# map projection
+
+# restrict to >15, >30, >60, >90 minutes of delay
+delay1 <-merged_route_delay %>%
+  filter(mean_delay >= 60) 
+delay2 <-merged_route_delay %>%
+  filter(mean_delay >= 120) 
+delay3 <-merged_route_delay %>%
+  filter(mean_delay >= 180) 
+delay4 <-merged_route_delay %>%
+  filter(mean_delay >= 240) %>% filter(!is.na(pop1)) %>% filter(!is.na(pop2)) 
+
+geo <- list(
+  scope = 'north america',
+  projection = list(type = 'azimuthal equal area'),
+  showland = TRUE,
+  landcolor = toRGB("gray95"),
+  countrycolor = toRGB("gray80")
+)
+
+
+p1 <- plot_geo(locationmode = 'USA-states', color = I("red")) %>%
+  add_markers(
+    data = delay1, x = ~lon1, y = ~lat1, text = ~name1,
+    size = ~pop1, hoverinfo = "text", alpha = 0.5
+  ) %>%
+  add_markers(
+    data = delay1, x = ~lon2, y = ~lat2, text = ~name2,
+    size = ~pop2, hoverinfo = "text", alpha = 0.5
+  ) %>%
+  add_segments(
+    x = ~lon1, xend = ~lon2,
+    y = ~lat1, yend = ~lat2,
+    alpha = 0.3, size = I(1), hoverinfo = "none"
+  ) %>%
+  layout(
+    title = '2017 flight routes with >60 min delay',
+    geo = geo, showlegend = FALSE) 
+
+
+
+p2 <- plot_geo(locationmode = 'USA-states', color = I("red")) %>%
+  add_markers(
+    data = delay1, x = ~lon1, y = ~lat1, text = ~name1,
+    size = ~pop1, hoverinfo = "text", alpha = 0.5
+  ) %>%
+  add_markers(
+    data = delay2, x = ~lon2, y = ~lat2, text = ~name2,
+    size = ~pop2, hoverinfo = "text", alpha = 0.5
+  ) %>%
+  add_segments(
+    x = ~lon1, xend = ~lon2,
+    y = ~lat1, yend = ~lat2,
+    alpha = 0.3, size = I(1), hoverinfo = "none"
+  ) %>%
+  layout(
+    title = '2017 flight routes with >120 min delay',
+    geo = geo, showlegend = FALSE)
+
+
+
+p3 <- plot_geo(locationmode = 'USA-states', color = I("red")) %>%
+  add_markers(
+    data = delay3, x = ~lon1, y = ~lat1, text = ~name1,
+    size = ~pop1, hoverinfo = "text", alpha = 0.5
+  ) %>%
+  add_markers(
+    data = delay3, x = ~lon2, y = ~lat2, text = ~name2,
+    size = ~pop2, hoverinfo = "text", alpha = 0.5
+  ) %>%
+  add_segments(
+    x = ~lon1, xend = ~lon2,
+    y = ~lat1, yend = ~lat2,
+    alpha = 0.3, size = I(1), hoverinfo = "none"
+  ) %>%
+  layout(
+    title = '2017 flight routes with >180 min delay',
+    geo = geo, showlegend = FALSE )
+
+
+p4 <- plot_geo(locationmode = 'USA-states', color = I("red")) %>%
+  add_markers(
+    data = delay3, x = ~lon1, y = ~lat1, text = ~name1,
+    size = ~pop1, hoverinfo = "text", alpha = 0.5
+  ) %>%
+  add_markers(
+    data = delay4, x = ~lon2, y = ~lat2, text = ~name2,
+    size = ~pop2, hoverinfo = "text", alpha = 0.5
+  ) %>%
+  add_segments(
+    x = ~lon1, xend = ~lon2,
+    y = ~lat1, yend = ~lat2,
+    alpha = 0.3, size = I(1), hoverinfo = "none"
+  ) %>%
+  layout(
+    title = '2017 flight routes with >240 min delay',
+    geo = geo, showlegend = FALSE )
+```
+
+
+
+```{r}
+p <- subplot(p1, p2, p3, p4, nrows = 2) %>%
+  layout(title = "2017 flight routes with different delay times",
+         xaxis = list(domain=list(x=c(0,0.5),y=c(0,0.5))),
+         scene = list(domain=list(x=c(0.5,1),y=c(0,0.5))),
+         xaxis2 = list(domain=list(x=c(0.5,1),y=c(0.5,1))),
+         annotations = list(
+ list(x = 0.2 , y = 1, text = ">60 mins", showarrow = F, xref='paper', yref='paper'),
+  list(x = 0.8 , y = 1, text = ">120 mins", showarrow = F, xref='paper', yref='paper'),
+ list(x = 0.2 , y = 0.5, text = ">180 mins", showarrow = F, xref='paper', yref='paper'),
+  list(x = 0.8 , y = 0.5, text = ">240 mins", showarrow = F, xref='paper', yref='paper'))
+         )
+p
+```
+
+We can see from the plot that as the threshold for delays increases, the number of routes with the corresponding delay time decreases. There have been many routes with average delay times of 15+ minutes in 2017, but only very few of them had an average delay of more than 60 or 90 minutes (e.g. the route between New York and San Antonio).
+
+##Delays by Seasons
+
+```{r}
+# calculate mean departure delay minutes by state and by Seasons
+state_delay_spring <- dat %>%  filter(DEP_DEL15==1) %>% filter(MONTH %in% c(3,4,5))%>%
+  group_by(ORIGIN_STATE_ABR) %>%
+  summarize(mean_delay = mean(DEP_DELAY_NEW, na.rm = TRUE))
+
+state_delay_summer <- dat %>% filter(DEP_DEL15==1) %>% filter(MONTH %in% c(6,7,8))%>%
+  group_by(ORIGIN_STATE_ABR) %>%
+  summarize(mean_delay = mean(DEP_DELAY_NEW, na.rm = TRUE))
+
+state_delay_autumn <- dat %>% filter(DEP_DEL15==1) %>% filter(MONTH %in% c(9,10,11))%>%
+  group_by(ORIGIN_STATE_ABR) %>%
+  summarize(mean_delay = mean(DEP_DELAY_NEW, na.rm = TRUE))
+
+state_delay_winter <- dat %>% filter(DEP_DEL15==1) %>% filter(MONTH %in% c(12,1,2))%>%
+  group_by(ORIGIN_STATE_ABR) %>%
+  summarize(mean_delay = mean(DEP_DELAY_NEW, na.rm = TRUE))
+```
+
+```{r}
+# give state boundaries white borders
+l <- list(color = toRGB("white"), width = 2)
+# specify some map projection/options
+g <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showlakes = TRUE,
+  lakecolor = toRGB('white')
+)
+
+# make the plot
+p_spring <- plot_geo(state_delay_spring, locationmode = 'USA-states') %>%
+  add_trace(
+    z = ~mean_delay, locations = ~ORIGIN_STATE_ABR,
+    color = ~mean_delay, colors = 'Reds'
+  ) %>%
+  colorbar(title = "Departure delay(min) in spring") %>%
+  layout(
+    title = '2017 average departure delay (minutes) by states in Spring',
+    geo = g
+  )
+
+p_summer <- plot_geo(state_delay_summer, locationmode = 'USA-states') %>%
+  add_trace(
+    z = ~mean_delay, locations = ~ORIGIN_STATE_ABR,
+    color = ~mean_delay, colors = 'Reds'
+  ) %>%
+  colorbar(title = "Departure delay(min) in summer") %>%
+  layout(
+    title = '2017 average departure delay (minutes) by states in Summer',
+    geo = g
+  )
+
+p_autumn <- plot_geo(state_delay_autumn, locationmode = 'USA-states') %>%
+  add_trace(
+    z = ~mean_delay, locations = ~ORIGIN_STATE_ABR,
+    color = ~mean_delay, colors = 'Reds'
+  ) %>%
+  colorbar(title = "Departure delay(min) in autumn") %>%
+  layout(
+    title = '2017 average departure delay (minutes) by states in Autumn',
+    geo = g
+  )
+
+p_winter <- plot_geo(state_delay_winter, locationmode = 'USA-states') %>%
+  add_trace(
+    z = ~mean_delay, locations = ~ORIGIN_STATE_ABR,
+    color = ~mean_delay, colors = 'Reds'
+  ) %>%
+  colorbar(title = "Departure delay(min) in winter") %>%
+  layout(
+    title = '2017 average departure delay (minutes) by states in Winter',
+    geo = g
+  )
+
+
+```
+
+
+```{r}
+p_season <- subplot(p_spring, p_summer, p_autumn, p_winter, nrows = 2) %>%
+  layout(title = "2017 average departure delay (minutes) by seasons",
+         xaxis = list(domain=list(x=c(0,0.5),y=c(0,0.5))),
+         scene = list(domain=list(x=c(0.5,1),y=c(0,0.5))),
+         xaxis2 = list(domain=list(x=c(0.5,1),y=c(0.5,1))),
+         annotations = list(
+ list(x = 0.2 , y = 1, text = "spring", showarrow = F, xref='paper', yref='paper'),
+  list(x = 0.8 , y = 1, text = "summer", showarrow = F, xref='paper', yref='paper'),
+ list(x = 0.2 , y = 0.5, text = "autumn", showarrow = F, xref='paper', yref='paper'),
+  list(x = 0.8 , y = 0.5, text = "winter", showarrow = F, xref='paper', yref='paper'))
+         )
+p_season
+```
+
+
