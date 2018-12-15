@@ -7,7 +7,7 @@ After gaining an overview of the delay patterns by various factors, we wish to m
 # read in dataset
 library(plotly)
 library(dplyr)
-df <- read.csv("C:/Users/ziwan/Desktop/2018 Fall Courses/BST 260/Project/dataset/flight2017.csv")
+df <- read.csv("C:/Users/jindanyao/Desktop/2018fall/2018fall/BST260/final project/database/flight2017.csv")
 ```
 
 
@@ -25,6 +25,8 @@ In this part, we are using linear models to predict mean delay times. Our predic
 library(lsmeans)
 
 # crude, predictor: carrier
+df <- df %>%
+   filter(DEP_DELAY_NEW>=15)
 delay.lm = lm(DEP_DELAY_NEW ~ OP_UNIQUE_CARRIER, data = df)
 lsmeans(delay.lm, ~ OP_UNIQUE_CARRIER)
 
@@ -33,6 +35,7 @@ lsmeans(delay.lm, ~ OP_UNIQUE_CARRIER)
 # adjusted, predictor: carrier
 
 df <- df %>%
+   filter(DEP_DELAY_NEW>=15)%>%
    mutate(hour_cat = cut(DEP_TIME, breaks=c(-Inf, 600, 1200, 1800, Inf), labels=c("0 to 6","6 to 12","12 to 18", "18 to 24"))) %>%
    mutate(NORTHEAST = ifelse(ORIGIN_STATE_ABR %in% c("CT","ME", "MA", "NH","RI","VT","NJ","NY","PA"), "yes", "no")) %>%
    mutate(MIDWEST = ifelse(ORIGIN_STATE_ABR %in% c("IL","IN","MI","OH","WI","IA","KS","MN","MO","NE","ND","SD"), "yes", "no")) %>%
@@ -53,7 +56,7 @@ lsmeans(delay2.lm, ~ OP_UNIQUE_CARRIER )
 ```
 
 We summarized the above results into the table below:
-![Table 1](C:\Users\ziwan\Desktop\2018 Fall Courses\BST 260\Project\bst260-airlinedelays\Table 1.PNG)
+![Table 1](C:/Users/jindanyao/Desktop/2018fall/2018fall/BST260/final project\bst260-airlinedelays-master\Table 1.PNG)
 
 From the adjusted predicted mean delay times for each carrier, we see that when assuming all other factors are on average, Hawaiian Airline in general has the shortest predicted delay time, followed by Alaska Airline, American Airline and Delta Airline; and in general JetBlue Airline has the longest predicted delay times.
 
@@ -62,6 +65,8 @@ From the adjusted predicted mean delay times for each carrier, we see that when 
 
 ```{r}
 # crude, predictor: day of week
+df <- df %>%
+   filter(DEP_DELAY_NEW>=15)
 delay_day.lm = lm(DEP_DELAY_NEW ~ factor(DAY_OF_WEEK), data = df)
 lsmeans(delay_day.lm, ~ DAY_OF_WEEK)
 ```
@@ -71,10 +76,16 @@ lsmeans(delay2.lm, ~ DAY_OF_WEEK )
 ```
 
 We summarized the above results into the table below:
-![Table 2](C:\Users\ziwan\Desktop\2018 Fall Courses\BST 260\Project\bst260-airlinedelays\Table 2.PNG)
+![Table 2](C:/Users/jindanyao/Desktop/2018fall/2018fall/BST260/final project\bst260-airlinedelays-master\Table 2.PNG)
 
 From the adjusted predicted mean delay times by each day of week, we that that when assuming all other factors are on average, going on a flight on Tuesday, Wednesday, or Saturday would generally have shorter delay times, while leaving on Friday would probably lead to longer delay.
-
+```{r}
+# crude, predictor: time of day
+df <- df %>%
+   filter(DEP_DELAY_NEW>=15)
+delay_day.lm = lm(DEP_DELAY_NEW ~ factor(hour_cat), data = df)
+lsmeans(delay_day.lm, ~ hour_cat)
+```
 
 ```{r}
 # adjusted, predictor: time of day
@@ -82,7 +93,7 @@ lsmeans(delay2.lm, ~ hour_cat )
 ```
 
 We summarized the above results into the table below:
-![Table 3](C:\Users\ziwan\Desktop\2018 Fall Courses\BST 260\Project\bst260-airlinedelays\Table 3.PNG)
+![Table 3](C:/Users/jindanyao/Desktop/2018fall/2018fall/BST260/final project\bst260-airlinedelays-master\Table 3.PNG)
 From the adjusted model, we see that when assuming all other factors are on average, going on a flight at in the morning (6:00 to 12:00) would generally have shorter delay times, while leaving at night (18:00 to 24:00) would likely result in longer delay.
 
 
@@ -95,7 +106,7 @@ lsmeans(delay2.lm, ~ OP_UNIQUE_CARRIER*DAY_OF_WEEK )
 ```
 
 We summarized the above results (stratified by day of week) into the table below:
-![Table 4](C:\Users\ziwan\Desktop\2018 Fall Courses\BST 260\Project\bst260-airlinedelays\Table 4.PNG)
+![Table 4](C:/Users/jindanyao/Desktop/2018fall/2018fall/BST260/final project\bst260-airlinedelays-master\Table 4.PNG)
 We see that similar to our previous findings, on average the delay times on Tuesdays are the shortest, and on Tuesday the carrier with the shortest predicted delay is Hawaiian Airline. Likewise, the predicted delay times for Fridays are the highest, and on Friday the carrier with the longest predicted delay is JetBlue. So probably not a good idea to leave on Friday on a JetBlue flight!
 
 
@@ -108,7 +119,7 @@ lsmeans(delay2.lm, ~ OP_UNIQUE_CARRIER*hour_cat )
 ```
 
 We summarized the above results (stratified by time of day) into the table below:
-![Table 5](C:\Users\ziwan\Desktop\2018 Fall Courses\BST 260\Project\bst260-airlinedelays\Table 5.PNG)
+![Table 5](C:/Users/jindanyao/Desktop/2018fall/2018fall/BST260/final project\bst260-airlinedelays-master\Table 5.PNG)
 We see that similar to our previous findings, on average the delay times when leaving between 6:00 to 12:00 in the morning are the shortest, and at that time period the carrier with the shortest predicted delay is still Hawaiian Airline. Likewise, the predicted delay times for 18:00 to 24:00 are the highest, and at that time period the carrier with the longest predicted delay is still JetBlue. 
 
 
@@ -187,7 +198,7 @@ rm(Winter)
 ```
 
 We summarized the above results (stratified by season) into the table below:
-![Table 6](C:\Users\ziwan\Desktop\2018 Fall Courses\BST 260\Project\bst260-airlinedelays\Table 6.PNG)
+![Table 6](C:/Users/jindanyao/Desktop/2018fall/2018fall/BST260/final project\bst260-airlinedelays-master\Table 6.PNG)
 
 We first see that in general, delays are much shorter during Fall for all carriers. Overall, Hawaiian Airline still show the shortest predicted delays for most seasons (except during Winter, where Alaska seems to be doing better). JetBlue has the longest delay time during Summer. In other seasons, some other carriers seem to have longer predicted delays than JetBlue.
 
@@ -246,7 +257,7 @@ exp(coef(logit_model))
 ```
 
 We summarized the results (stratified by season) for logistic regressions into the table below:
-![Table 6](C:\Users\ziwan\Desktop\2018 Fall Courses\BST 260\Project\bst260-airlinedelays\Table 6.PNG)
+![Table 7](C:/Users/jindanyao/Desktop/2018fall/2018fall/BST260/final project\bst260-airlinedelays-master\Table 7.PNG)
 
 Similar to findings in the linear regressions results, here we also see that when compared to American Airline, the odds of delaying 15+ minutes for Hawaiian Airline is the lowest across all seasons, and the odds of delaying 15+ minutes is highest among either JetBlue or Virgin America (Depending on seasons).
 
