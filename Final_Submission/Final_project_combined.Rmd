@@ -2,7 +2,7 @@
 contributed by Danyao Jin, Shannon Ma, Xinyi Li and Zifan Wang
 
 ## Overview and motivation:
-Flight delay remains to be a huge problem for travelers worldwide. A delay of flight is often defined as arriving or departing more than 15 minutes later than schedule. According to the U.S. Department of Transportation (DOT) Bureau of Transportation Statistics (BTS), 18.15% of all scheduled flights are delayed in U.S. in 2017. Some main causes of delay include late arrival of the last flight, National Aviation System delay (congested airports and air-traffic-jam), and airline¡¯s reasons. [1](https://www.transtats.bts.gov/OT_Delay/OT_DelayCause1.asp?pn=1)
+Flight delay remains to be a huge problem for travelers worldwide. A delay of flight is often defined as arriving or departing more than 15 minutes later than schedule. According to the U.S. Department of Transportation (DOT) Bureau of Transportation Statistics (BTS), 18.15% of all scheduled flights are delayed in U.S. in 2017. Some main causes of delay include late arrival of the last flight, National Aviation System delay (congested airports and air-traffic-jam), and airlineÂ¡Â¯s reasons. [1](https://www.transtats.bts.gov/OT_Delay/OT_DelayCause1.asp?pn=1)
 
 As a traveler, what can I do to avoid flight delay or minimize delay time? Which airline performs the best? Does travelling in a busy Monday increase my chance of suffering delay? 
 Which time of a day might reduce the delay time? Do those big airports like John F. Kennedy International airport have the highest delay rates? Do main causes of delay vary according to airlines and airports?
