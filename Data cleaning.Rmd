@@ -1,0 +1,41 @@
+# Data cleaning (checking distributions and missing values)
+```{r}
+# read in the data
+df <- read.csv("C:/Users/ziwan/Desktop/2018 Fall Courses/BST 260/Project/dataset/flight2017.csv")
+```
+
+```{r}
+# check missing values:
+colSums(is.na(df))
+```
+There are no missings for the year, quarter, month, day of month, day of weak, date, origin or destination city/states of the flights. There are 80,343 missing values for departure delay times, the main outcome of interest in our study. We assume that the missing values are due to flight cancellation. For this study, we will look at the flights with non-missing departure delay times (missing values will be automatically excluded from the plots or regression models. 
+
+
+We also look at the distributions of the relevant variables
+```{r}
+summary(df)
+```
+
+
+The minimum departure delay time is 0 (in this dataset, all early departures are set to 0), and the maximum departure delay time is 2755 minutes (i.e. 46 hours). After We checked on [TripAdvisor](https://www.tripadvisor.com/ShowTopic-g609057-i12143-k4639347-What_s_your_longest_ever_flight_delay-Ovacik_Oludeniz_Mugla_Province_Turkish_Aegean_Coast.html) and [The Ten Worst Flight Delays In History](https://jalopnik.com/the-ten-worst-flight-delays-in-history-1530577136), we believe that the maximum value of departure delay times in this dataset could be reasonable, so we won't exclude it. Also, to make sure that we won't be impacted by potential extreme values, we will not only perform linear regressions but also logistic regressions in our data analysis.
+
+The minimum flight distance is 31 miles, and the longest flight distance is 4983 miles, which are also reasonable (see [shortest US flight route from Barnstaple Municipal Airport on Cape Cod to Nantucket Memorial Airport](http://edition.cnn.com/travel/article/world-shortest-air-routes/index.html) and [~ 4000 miles distance from New York to Hawaii](https://www.distancefromto.net/distance-from-new-york-to-hawaii).
+
+```{r}
+month_freq <- table(df$MONTH)
+day_freq <- table(df$DAY_OF_WEEK)
+carrier_freq <- table(df$OP_UNIQUE_CARRIER)
+state <- table(df$ORIGIN_STATE_ABR)
+
+month_freq <- as.data.frame(month_freq)
+day_freq <- as.data.frame(day_freq)
+carrier_freq <- as.table(carrier_freq)
+state <- as.table(state)
+
+month_freq
+day_freq
+carrier_freq
+state
+
+```
+The frequencies of month, day of week, carrier, and departure state of the flights are all in reasonable range as well.
